@@ -2,9 +2,6 @@
 
 # HiveNightmare 'Fileless' Exploit PoC:
 
-![images](https://github.com/user-attachments/assets/c1419716-545b-47c8-b4c4-87f12699ba96)
-
-
 - [Overview](#overview)
 - [Features](#features)
 - [Lab Simulation Example](#lab-simulation-example)
@@ -19,6 +16,8 @@
 - [References & Further Reading](#references--further-reading)
 
 ---
+
+![images](https://github.com/user-attachments/assets/e4fe98e6-ccf0-47a4-a467-feab254d8340)
 
 ## Overview
 
