@@ -1,0 +1,11 @@
+psexec.exe
+psexecsvc.exe
+
+paexec.exe
+PAExec-*.exe
+csexec.exe 
+remcom.exe
+remcomsvc.exe
+xcmd.exe
+xcmdsvc.exe
+

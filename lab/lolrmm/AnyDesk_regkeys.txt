@@ -1,0 +1,8 @@
+HKLM\SOFTWARE\Clients\Media\AnyDesk
+HKLM\SYSTEM\CurrentControlSet\Services\AnyDesk
+HKLM\SOFTWARE\Classes\.anydesk\shell\open\command
+HKLM\SOFTWARE\Classes\AnyDesk\shell\open\command
+HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Print\Printers\AnyDesk Printer\*
+HKLM\DRIVERS\DriverDatabase\DeviceIds\USBPRINT\AnyDesk
+HKLM\DRIVERS\DriverDatabase\DeviceIds\WSDPRINT\AnyDesk
+HKLM\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\AnyDesk

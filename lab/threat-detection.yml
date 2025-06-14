@@ -1,0 +1,22 @@
+monitoring:
+  - id: 4688
+    description: Detect creation of HiveNightmare or VSS tools by non-admin users
+    conditions:
+      - NewProcessName: ["*HiveNightmare.exe","*vssadmin.exe","*diskshadow.exe"]
+      - SubjectUserGroup: "non-admin"
+  - id: 4656
+    description: Handle request on registry hive file by non-admin
+    conditions:
+      - ObjectName: "*\\System32\\config\\SAM"
+      - SubjectUserGroup: "non-admin"
+  - id: 4663
+    description: Registry hive read/write access by non-admin
+    conditions:
+      - ObjectName: "*\\System32\\config\\SYSTEM"
+      - AccessMask: ["ReadData","WriteData"]
+      - SubjectUserGroup: "non-admin"
+  - id: 8003
+    description: Volume Shadow Copy creation
+    conditions:
+      - EventDescription: "shadow copy created"
+      - InitiatedBy: "any"

@@ -1,0 +1,3 @@
+EventID IN (4656, 4663) AND
+ObjectName CONTAINS "\\System32\\config\\SAM" AND
+SubjectUserGroup != "Administrators"

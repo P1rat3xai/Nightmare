@@ -1,0 +1,31 @@
+title: Repeated DNS Resolution Failures for Microsoft NCSI Domain
+id: 1a2b3c4d-5e6f-7890-abcd-ef1234567890
+description: Detects name resolution failures for msftncsi.com, which may indicate network manipulation or sandbox evasion techniques.
+status: experimental
+author: Q (ChatGPT/AP3X persona)
+date: 2025/06/12
+logsource:
+  product: windows
+  service: system
+  definition: 'Event ID 1014 from Microsoft-Windows-DNS-Client'
+detection:
+  selection:
+    EventID: 1014
+    Provider_Name: 'Microsoft-Windows-DNS-Client'
+    EventData.QueryName|contains: 'msftncsi.com'
+  condition: selection
+fields:
+  - EventID
+  - EventData.QueryName
+  - EventData.Address
+  - EventData.ClientPID
+falsepositives:
+  - Temporary network outage
+  - Legitimate DNS server hiccups
+  - Custom firewalls or proxies
+level: medium
+tags:
+  - attack.defense-evasion
+  - attack.t1036
+  - detection.dns
+  - windows

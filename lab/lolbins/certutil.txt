@@ -1,0 +1,35 @@
+:: 1. Encode pre_dropper.7z to Base64 with certutil (quiet)
+certutil -encode pre_dropper.7z pre_dropper.b64 >nul
+
+:: 2. Encode pre_dropper.7z to Base64 with certutil (verbose)
+certutil -encode pre_dropper.7z pre_dropper.b64
+
+:: 3. Decode Base64 pre_dropper.b64 back to pre_dropper.7z
+certutil -decode pre_dropper.b64 pre_dropper.7z
+
+:: 4. Copy and append base64 to carrier image (basic stego)
+copy /b carrier.jpg + pre_dropper.b64 embedded_carrier.jpg
+
+:: 5. Copy and append base64 to PNG carrier image
+copy /b carrier.png + pre_dropper.b64 embedded_carrier.png
+
+:: 6. Copy and append base64 with another file (e.g., txt) appended to image
+copy /b carrier.jpg + notes.txt + pre_dropper.b64 embedded_multi.jpg
+
+:: 7. Encode with certutil and pipe output to file (alternative)
+certutil -encode pre_dropper.7z stdout > pre_dropper.b64
+
+:: 8. Decode with certutil from a differently named b64 file
+certutil -decode encoded_file.b64 pre_dropper.7z
+
+:: 9. Copy multiple files in binary mode (carrier + base64 + extra payload)
+copy /b carrier.jpg + pre_dropper.b64 + extra_payload.bin embedded_full.jpg
+
+:: 10. Encode and suppress output with redirection to nul (quiet)
+certutil -encode pre_dropper.7z pre_dropper.b64 >nul 2>&1
+
+:: 11. Encode and output hash for integrity (just the command line)
+certutil -hashfile pre_dropper.7z SHA256
+
+:: 12. Decode base64 to output file with overwrite confirmation suppressed (powershell)
+powershell -Command "certutil -decode pre_dropper.b64 pre_dropper.7z"
