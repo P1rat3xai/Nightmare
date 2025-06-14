@@ -1,6 +1,6 @@
 # Nightmare 'Fileless' Exploit PoC
 
-> **Educational Red/Purple Team Framework for Simulating Fileless Malware on Windows 11**
+> **Educational Red/Purple Team Repo for Simulating Fileless Malware on Windows 11**
 
 ---
 
