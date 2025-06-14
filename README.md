@@ -245,6 +245,3 @@ certutil -decode payload.b64 wipe.exe && wipe.exe
 
 **Stay safe, research responsibly, and always use in a legal and ethical manner.**
 
----
-
-If you need this as a file or want specific improvements (like adding a "Features" section or more code comments), please specify!
