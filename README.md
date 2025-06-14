@@ -1,9 +1,13 @@
-
-
 # HiveNightmare 'Fileless' Exploit PoC
 
-- [Overview](#overview)
+> **Educational Red/Purple Team Framework for Simulating Fileless Malware on Windows 11**
+
+---
+
+## Table of Contents
+- [Project Summary](#project-summary)
 - [Features](#features)
+- [Getting Started](#getting-started)
 - [Lab Simulation Example](#lab-simulation-example)
 - [Reconnaissance with Google Dorks](#reconnaissance-with-google-dorks)
 - [LOLBins Overview](#lolbins-overview)
@@ -18,6 +22,39 @@
 ---
 
 ![images](https://github.com/user-attachments/assets/e4fe98e6-ccf0-47a4-a467-feab254d8340)
+
+## Project Summary
+
+**HiveNightmare** (CVE-2021-36934) is a research project for simulating advanced fileless malware attack chains using built-in Windows binaries (LOLBins). It is designed for red/purple team exercises, detection engineering, and security research in isolated lab environments.
+
+> **Warning:** For research and training in isolated labs only. **Do not use on production or unauthorized systems.**
+
+## Features
+- Simulates fileless malware using only built-in Windows tools
+- Demonstrates privilege escalation, credential access, and lateral movement
+- Includes PowerShell, DLL, and LOLBin-based payloads
+- MITRE ATT&CK mapping for detection engineering
+- Example detection and mitigation strategies
+
+## Getting Started
+
+### Prerequisites
+- Windows 10/11 lab environment (never use on production systems)
+- Visual Studio (for building C++ DLLs/executables)
+- PowerShell 5.0+
+- 7-Zip (for archive extraction)
+
+### Build Instructions
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/your-repo/Nightmare.git
+   cd Nightmare
+   ```
+2. Build the DLL/executable (Windows, Visual Studio):
+   - Open `core/Nightmare.sln` in Visual Studio and build, **or**
+   - Use the provided build scripts (see `build_windows.bat`)
+
+---
 
 ## Overview
 
