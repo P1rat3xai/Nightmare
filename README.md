@@ -2,11 +2,8 @@
 
 # HiveNightmare 'Fileless' Exploit PoC:
 
-![tyrell-wellick-looking-at-a-purple-light-just-before-he-dies-in-mr-robot](https://github.com/user-attachments/assets/f3e33294-fed9-41ca-bf0a-38421a28f982)
+![images](https://github.com/user-attachments/assets/c1419716-545b-47c8-b4c4-87f12699ba96)
 
----
-
-## Table of Contents
 
 - [Overview](#overview)
 - [Features](#features)
