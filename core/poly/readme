@@ -41,3 +41,12 @@
   | Verdict |                         |   Logging /  |
   | (Pass/Fail)                       |  Regression   |
   +---------+                         +--------------+
+
+## clang++ mutated.cpp -o mutated_bin -std=c++17 -Wall -Wextra
+
+## example:
+./mutated_bin > mutated.out
+./original_bin > original.out
+diff mutated.out original.out
+
+
