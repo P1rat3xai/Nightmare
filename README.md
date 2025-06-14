@@ -1,4 +1,4 @@
-# HiveNightmare 'Fileless' Exploit PoC
+# Nightmare 'Fileless' Exploit PoC
 
 > **Educational Red/Purple Team Framework for Simulating Fileless Malware on Windows 11**
 
@@ -25,7 +25,7 @@
 
 ## Project Summary
 
-**HiveNightmare** (CVE-2021-36934) is a research project for simulating advanced fileless malware attack chains using built-in Windows binaries (LOLBins). It is designed for red/purple team exercises, detection engineering, and security research in isolated lab environments.
+This repo includes **HiveNightmare** (CVE-2021-36934) as part of the research project for simulating advanced fileless malware attack chains using built-in Windows binaries (LOLBins). It is designed for red/purple team exercises, detection engineering, and security research in isolated lab environments.
 
 > **Warning:** For research and training in isolated labs only. **Do not use on production or unauthorized systems.**
 
