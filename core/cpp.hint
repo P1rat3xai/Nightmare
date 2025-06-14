@@ -1,0 +1,2 @@
+#define NIGHTMARE_API __declspec(dllexport)
+#define NIGHTMARE_API __declspec(dllimport)
