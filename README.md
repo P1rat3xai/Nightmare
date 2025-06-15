@@ -1,7 +1,7 @@
 
 
-# Fileless Ransomware PoC  
-**PoC 'fileless' ransomware for educational and research purposes only.**
+# Art of Turning a Windows Host Against Itself:
+**PoC 'fileless' malware for educational and research purposes only.**
 
 > **Warning:**  
 > This repository is intended exclusively for educational, authorized penetration testing, and research use in isolated lab environments. **Do not deploy or test on any production or unauthorized systems.**  
