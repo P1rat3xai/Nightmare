@@ -1,6 +1,6 @@
 
 
-# Nightmare: Fileless Ransomware PoC  
+# Fileless Ransomware PoC  
 **PoC 'fileless' ransomware for educational and research purposes only.**
 
 > **Warning:**  
