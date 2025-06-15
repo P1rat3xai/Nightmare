@@ -135,7 +135,7 @@ Set-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run" -Name "ra
 ## Reconnaissance and LOLBins
 
 ### Google Dork Examples
-
+SHODAN or [FOFA](https://en.fofa.info/). 
 **Objective:** Identify publicly exposed printer services that may be vulnerable to PrintNightmare or similar exploits.
 
 Example queries:
